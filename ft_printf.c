@@ -22,18 +22,33 @@ int ft_strlen(char *str)
     return (i);
 }
 
-int numlen(unsigned int nb)
+int	ft_hexalen(unsigned int n)
 {
-    int i = 0;
+	if (n < 16)
+		return 1;
+	else
+		return (1  + ft_hexalen(n / 16));
+}
 
-    if (nb == 0)
+int numlen(int nbx)
+{
+    int i = 1;
+
+    if (nbx < 0)
+    {
+	    i++;
+    }
+    if (nbx >= -9 && nbx <= 9)
         return 1;
     else
-        while (nb != 0)
+    {
+	while (nbx / 10 != 0)
         {
             i++;
-            nb /= 10;
-        } 
+            nbx = nbx / 10;
+        }
+    }
+    return (i);
 }
 
 void    ft_putchar(char c, int *size)
@@ -101,10 +116,13 @@ int    ft_fill_width(t_flags *flags, char *str)
     used = (char*)malloc(sizeof(char) * 256);
     while (str[i] != 's' && str[i] != 'x' && str[i] != 'd' && str[i] != '.' && str[i])
     {
-        used[i] = str[i];
-        i++;
+	    while (str[i] >= '0' && str[i] <= '9')
+	    {
+		    used[i] = str[i];
+		    i++;
+	    }
+    	flags->width = atoi(used);
     }
-    flags->width = ft_atoi(used);
     free(used);
     return (i);
 }
@@ -117,15 +135,18 @@ int    ft_fill_precision(t_flags *flags, char *str)
     used = (char*)malloc(sizeof(char) * 256);
     while (str[i] != 's' && str[i] != 'x' && str[i] != 'd' && str[i])
     {
-        used[i] = str[i];
-        i++;
+	    while (str[i] >= '0' && str[i] <= '9')
+	    {
+		    used[i] = str[i];
+		    i++;
+	    }
+    	flags->precision = atoi(used);
     }
-    flags->precision = ft_atoi(used);
     free(used);
     return (i);
 }
 
-void    ft_print_elem(int start, int end, int *size, char c)
+void    ft_print_elem(int end, int start, char c, int *size)
 {
     while (start < end)
     {
@@ -140,17 +161,19 @@ void    ft_parse_id(va_list args, int *size, t_flags flags)
 {
     int nb;
 	nb = va_arg(args, int);
-    if (flags.precision == 1)
+    if (flags.is_precision == 1)
     {
-        ft_print_elem(flags.width, flags.precision > numlen((unsigned int)nb) ? 
-            flags.precision, numlen((unsigned int)nb), ' ', size);
+	    if (nb > 0)
+		    ft_print_elem(flags.width, flags.precision > numlen(nb) ? flags.precision : numlen((unsigned int)nb), ' ', size);
+	   else
+		   ft_print_elem(flags.width, flags.precision > numlen(nb) ? flags.precision + 1 : numlen((unsigned int)nb), ' ', size);
         nb < 0 ? ft_putchar('-', size) : 0;
         nb < 0 ? nb *= -1 : 0;
-        ft_print_elem(flags.precision, numlen((unsigned int)nb), '0', size);
+        ft_print_elem(flags.precision, numlen(nb), '0', size);
     }
     else
     {
-        ft_print_elem(flags.width, numlen((unsigned int)nb), ' ', size);
+	ft_print_elem(flags.width, numlen(nb), ' ', size);
         nb < 0 ? ft_putchar('-', size) : 0;
         nb < 0 ? nb *= -1 : 0;
     }
@@ -162,15 +185,16 @@ void    ft_parse_x(va_list args, int *size, t_flags flags)
 {
     unsigned int nb;
 	nb = va_arg(args, unsigned int);
-    if (flags.precision == 1)
+    if (flags.is_precision == 1)
     {
-        ft_print_elem(flags.width, flags.precision > numlen((unsigned int)nb) ? 
-            flags.precision, numlen((unsigned int)nb), ' ', size);
-        ft_print_elem(flags.precision, numlen((unsigned int)nb), '0', size);
+        ft_print_elem(flags.width, flags.precision > ft_hexalen(nb) ? flags.precision : ft_hexalen(nb), ' ', size);
+        ft_print_elem(flags.precision, ft_hexalen(nb), '0', size);
     }
     else
-        ft_print_elem(flags.width, numlen((unsigned int)nb), ' ', size);
-    ft_putnbr_u(nb, size);
+    {
+        ft_print_elem(flags.width, ft_hexalen(nb), ' ', size);
+    }
+    ft_putadr(nb, size);
 }
 
 void    ft_parse_s(va_list args, int *size, t_flags flags)
@@ -181,7 +205,7 @@ void    ft_parse_s(va_list args, int *size, t_flags flags)
     used = va_arg(args, char*);
     if (flags.is_precision == 0)
     {
-        ft_print_elem(flags.width, numlen((unsigned int)nb), ' ', size);
+        ft_print_elem(flags.width, ft_strlen(used), ' ', size);
         ft_putstr(used, size);
     }
     else
@@ -198,62 +222,31 @@ void    ft_parse_s(va_list args, int *size, t_flags flags)
 }
         
 
-void    ft_extends_parse(va_list args, char *str, int *i, int *size)
+void    ft_parse_format(va_list args, char *str, int *i, int *size)
 {
     t_flags flags;
     int k = 0;
 
     init_struct(&flags);
-    if (str[i] != '.')
+    if (str[k] != '.')
     {
         flags.is_width = 1;
-        k +=ft_fill_width(&flags, str);
+        k += ft_fill_width(&flags, &str[k]);
     }
-    if (str[i] == '.')
+    if (str[k] == '.')
     {
         flags.is_precision = 1;
-        k +=ft_fill_precision
+        k +=ft_fill_precision(&flags, &str[k + 1]) + 1;
     }
-    *i = *i + k;
+    *i += k + 1;
     if (str[k] == 'd')
         ft_parse_id(args, size, flags);
     else if (str[k] == 'x')
         ft_parse_x(args, size, flags);
     else if (str[k] == 's')
-        ft_parse_s(args, size, flags);
+        ft_parse_s(args, size, flags);	
+
 }
-
-void    ft_parse_format(va_list args, char *str, int *i, int *size)
-{
-    *i += 1;
-    if (str[i] == 'd')
-    {
-        int number;
-	    nb = va_arg(args, int);
-        if (nb < 0)
-	    {
-		    ft_putchar('-', p);
-		    nb *= -1;
-	    }
-        ft_putnbr_u(nbr, size);
-    }
-    else if (str[i] == 's')
-    {
-        char *s;
-        s = va_arg(args, char*);
-        ft_putstr(s, size);
-    }
-    else if (str[i] == 'x')
-    {
-        unsigned int n;
-
-        n  = va_arg(args, unsigned int);
-        ft_putadr(n, size);
-    }
-    else
-        ft_extends_parse(args, str, i, size);
-}
-
 
 int    ft_printf(char *str, ...)
 {
@@ -265,10 +258,13 @@ int    ft_printf(char *str, ...)
     while (str[i])
     {
         if (str[i] == '%')
-            ft_parse_format(args, &str[i + 1], &i, &size);
-        else
+	{
+	     	ft_parse_format(args, &str[i + 1], &i, &size);
+		i++;
+	}
+	else
         {
-            ft_putchar(str[i], size);
+            ft_putchar(str[i], &size);
             i++;
         }
     }
@@ -279,14 +275,17 @@ int    ft_printf(char *str, ...)
 
 int main(void)
 {
-    printf("[%d], [%s], [%x]\n", 5, "Hello world !", 31);
-    ft_printf("[%d], [%s], [%x]\n", 5, "Hello world !", 31);
+   
+	printf("[%.5s]\n", "Hello wordl !");
+	ft_printf("[%.5s]\n", "Hello wordl !");
+	
+
+    //printf("[%15.5d]\n", -42);
+    //ft_printf("[%15.5d]\n", -42);
+    //printf("[%30.22d], [%30.22s], [%30.22x]\n", 5, "Hello world !", 31);
+    //ft_printf("[%30.22d], [%30.22s], [%30.22x]\n", 5, "Hello world !", 31);
 
     
-    printf("[%30.22d], [%30.22s], [%30.22x]\n", 5, "Hello world !", 31);
-    ft_printf("[%30.22d], [%30.22s], [%30.22x]\n", 5, "Hello world !", 31);
-
-    
-    printf("[%30.5d], [%30.5s], [%30.5x]\n", 5, "Hello world !", 31);
-    ft_printf("[%30.5d], [%30.5s], [%30.5x]\n", 5, "Hello world !", 31);
+    //printf("[%30.5d], [%30.5s], [%30.5x]\n", 5, "Hello world !", 31);
+    //ft_printf("[%30.5d], [%30.5s], [%30.5x]\n", 5, "Hello world !", 31);
 }
