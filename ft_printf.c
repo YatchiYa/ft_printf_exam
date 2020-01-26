@@ -169,7 +169,10 @@ void    ft_parse_id(va_list args, int *size, t_flags flags)
 		   ft_print_elem(flags.width, flags.precision > numlen(nb) ? flags.precision + 1 : numlen((unsigned int)nb), ' ', size);
         nb < 0 ? ft_putchar('-', size) : 0;
         nb < 0 ? nb *= -1 : 0;
-        ft_print_elem(flags.precision, numlen(nb), '0', size);
+	if (nb == INT_MIN)
+        	ft_print_elem(flags.precision + 1, numlen(nb), '0', size);
+	else
+        	ft_print_elem(flags.precision, numlen(nb), '0', size);
     }
     else
     {
@@ -276,8 +279,8 @@ int    ft_printf(char *str, ...)
 int main(void)
 {
    
-	printf("[%.5s]\n", "Hello wordl !");
-	ft_printf("[%.5s]\n", "Hello wordl !");
+	printf("[%15.20d]\n", INT_MIN);
+	ft_printf("[%15.20d]\n", INT_MIN);
 	
 
     //printf("[%15.5d]\n", -42);
