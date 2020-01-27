@@ -38,7 +38,9 @@ int numlen(int nbx)
     {
 	    i++;
     }
-    if (nbx >= -9 && nbx <= 9)
+    if (nbx == 0)
+        return 1;
+    else if (nbx >= -9 && nbx <= 9)
         return 1;
     else
     {
@@ -53,7 +55,7 @@ int numlen(int nbx)
 
 void    ft_putchar(char c, int *size)
 {
-    size += 1;
+    *size += 1;
     write(1, &c, 1);
 }
 
@@ -169,18 +171,22 @@ void    ft_parse_id(va_list args, int *size, t_flags flags)
 		   ft_print_elem(flags.width, flags.precision > numlen(nb) ? flags.precision + 1 : numlen((unsigned int)nb), ' ', size);
         nb < 0 ? ft_putchar('-', size) : 0;
         nb < 0 ? nb *= -1 : 0;
-	if (nb == INT_MIN)
+	    if (nb == INT_MIN)
         	ft_print_elem(flags.precision + 1, numlen(nb), '0', size);
-	else
+	    else
         	ft_print_elem(flags.precision, numlen(nb), '0', size);
+        if ((flags.is_width == 0 || flags.width == 0) && nb == 0 && flags.precision == 0)
+            ;
+        else
+            ft_putnbr_u(nb, size);
     }
     else
     {
-	ft_print_elem(flags.width, numlen(nb), ' ', size);
+	    ft_print_elem(flags.width, numlen(nb), ' ', size);
         nb < 0 ? ft_putchar('-', size) : 0;
         nb < 0 ? nb *= -1 : 0;
+        ft_putnbr_u(nb, size);
     }
-    ft_putnbr_u(nb, size);
 }
 
 
@@ -192,20 +198,28 @@ void    ft_parse_x(va_list args, int *size, t_flags flags)
     {
         ft_print_elem(flags.width, flags.precision > ft_hexalen(nb) ? flags.precision : ft_hexalen(nb), ' ', size);
         ft_print_elem(flags.precision, ft_hexalen(nb), '0', size);
+        if ((flags.is_width == 0 || flags.width == 0) && nb == 0 && flags.precision == 0)
+            ;
+        else
+            ft_putadr(nb, size);
     }
     else
     {
         ft_print_elem(flags.width, ft_hexalen(nb), ' ', size);
+        ft_putadr(nb, size);
     }
-    ft_putadr(nb, size);
+   
 }
 
 void    ft_parse_s(va_list args, int *size, t_flags flags)
 {
     char *used;
     int i = 0;
+    char *tmp;
+    char tnull[] = "(null)";
 
-    used = va_arg(args, char*);
+    tmp = va_arg(args, char*);
+    used = (tmp == NULL) ? tnull : tmp;
     if (flags.is_precision == 0)
     {
         ft_print_elem(flags.width, ft_strlen(used), ' ', size);
@@ -221,7 +235,6 @@ void    ft_parse_s(va_list args, int *size, t_flags flags)
             i++;
         }
     }
-    
 }
         
 
@@ -275,20 +288,3 @@ int    ft_printf(char *str, ...)
     return (size);
 }
 
-
-int main(void)
-{
-   
-	printf("[%15.20d]\n", INT_MIN);
-	ft_printf("[%15.20d]\n", INT_MIN);
-	
-
-    //printf("[%15.5d]\n", -42);
-    //ft_printf("[%15.5d]\n", -42);
-    //printf("[%30.22d], [%30.22s], [%30.22x]\n", 5, "Hello world !", 31);
-    //ft_printf("[%30.22d], [%30.22s], [%30.22x]\n", 5, "Hello world !", 31);
-
-    
-    //printf("[%30.5d], [%30.5s], [%30.5x]\n", 5, "Hello world !", 31);
-    //ft_printf("[%30.5d], [%30.5s], [%30.5x]\n", 5, "Hello world !", 31);
-}
