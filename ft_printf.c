@@ -6,7 +6,7 @@
 /*   By: yarab <marvin@42.fr>                       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2020/02/03 16:42:41 by yarab             #+#    #+#             */
-/*   Updated: 2020/02/03 18:53:49 by yarab            ###   ########.fr       */
+/*   Updated: 2020/02/03 18:58:56 by yarab            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -274,7 +274,6 @@ void	ft_parse_x(va_list args, t_flags flags, int *size)
 	if (flags.is_precision == 0 && flags.is_width == 0)
 	{
 		ft_putadr(nb, size);
-		printf("\n debug => %d\n", *size);
 	}
 	else if (nb == 0 && flags.is_precision == 0 && flags.width == 0)
 		ft_putchar('0', size);
